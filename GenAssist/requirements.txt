@@ -1,0 +1,5 @@
+fastapi
+gTTS
+Pillow
+python-multipart
+uvicorn[standard]
