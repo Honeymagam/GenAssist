@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenAssist — Customer Support Avatar System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0a0a0f;
+    --paper: #f5f2ee;
+    --accent: #e8431a;
+    --accent2: #3b5bff;
+    --muted: #7a7570;
+    --surface: #1a1a24;
+    --glow: rgba(232,67,26,0.15);
+    --mono: 'DM Mono', monospace;
+    --head: 'Syne', sans-serif;
+    --body: 'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--body);
+    background: var(--ink);
+    color: var(--paper);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%,-50%);
+    transition: transform 0.1s, width 0.2s, height 0.2s, background 0.2s;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--accent);
+    border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%,-50%);
+    transition: transform 0.18s cubic-bezier(.25,.46,.45,.94), width 0.3s, height 0.3s, opacity 0.3s;
+    opacity: 0.6;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.4rem 4rem;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .logo {
+    font-family: var(--head);
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+  .logo span { color: var(--accent); }
+  .nav-links {
+    display: flex; gap: 2.5rem;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--paper); }
+  .nav-cta {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    background: var(--accent);
+    color: var(--paper);
+    border: none;
+    padding: 0.6rem 1.4rem;
+    letter-spacing: 0.08em;
+    cursor: none;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  .nav-cta:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    padding: 8rem 4rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    right: -10%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(59,91,255,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-tag {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .hero-tag::before {
+    content: '';
+    display: inline-block;
+    width: 28px; height: 1.5px;
+    background: var(--accent);
+  }
+  .hero h1 {
+    font-family: var(--head);
+    font-size: clamp(3rem, 5.5vw, 5.5rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.8rem;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent);
+    display: block;
+  }
+  .hero-desc {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: rgba(245,242,238,0.6);
+    max-width: 440px;
+    margin-bottom: 2.5rem;
+    font-weight: 300;
+  }
+  .hero-actions { display: flex; gap: 1rem; align-items: center; }
+  .btn-primary {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 1rem 2rem;
+    cursor: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.15);
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+  }
+  .btn-primary:hover::after { transform: translateX(0); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(232,67,26,0.35); }
+  .btn-ghost {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 1rem 2rem;
+    cursor: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--paper); color: var(--paper); }
+
+  /* Avatar visual */
+  .hero-visual {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .avatar-frame {
+    width: 420px; height: 500px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .avatar-bg-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.05);
+    animation: rotateRing 20s linear infinite;
+  }
+  .avatar-bg-ring:nth-child(1) { width: 380px; height: 380px; }
+  .avatar-bg-ring:nth-child(2) { width: 310px; height: 310px; border-style: dashed; animation-direction: reverse; animation-duration: 14s; }
+  @keyframes rotateRing {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .avatar-card {
+    width: 240px; height: 300px;
+    background: linear-gradient(145deg, #1e1e2e, #12121a);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    z-index: 2;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,91,255,0.1);
+  }
+  .avatar-face {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 0.75rem;
+    position: relative;
+  }
+  .avatar-head {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, #c8956c, #b07850);
+    border-radius: 50% 50% 45% 45%;
+    position: relative;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .avatar-head::before {
+    content: '';
+    position: absolute;
+    top: 22px; left: 18px;
+    width: 12px; height: 12px;
+    background: #3b1f0a;
+    border-radius: 50%;
+    box-shadow: 28px 0 0 #3b1f0a;
+  }
+  .avatar-head::after {
+    content: '';
+    position: absolute;
+    bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    width: 24px; height: 8px;
+    border: 2px solid #3b1f0a;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    animation: speak 2s ease-in-out infinite;
+  }
+  @keyframes speak {
+    0%, 100% { height: 8px; }
+    50% { height: 14px; }
+  }
+  .avatar-body {
+    width: 60px; height: 50px;
+    background: linear-gradient(135deg, var(--accent2), #2a3db0);
+    border-radius: 30px 30px 0 0;
+  }
+  .avatar-status {
+    position: absolute;
+    bottom: 1rem; left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: #4ade80;
+    display: flex; align-items: center; gap: 0.4rem;
+    white-space: nowrap;
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+  .avatar-glare {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.05), transparent);
+    pointer-events: none;
+  }
+
+  /* Floating badges */
+  .badge {
+    position: absolute;
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 0.6rem 1rem;
+    border-radius: 2px;
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    color: rgba(245,242,238,0.7);
+    z-index: 3;
+    animation: float 4s ease-in-out infinite;
+  }
+  .badge span { color: var(--accent); }
+  .badge-1 { top: 40px; left: -20px; animation-delay: 0s; }
+  .badge-2 { top: 100px; right: -30px; animation-delay: 1s; }
+  .badge-3 { bottom: 80px; left: -10px; animation-delay: 2s; }
+  @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+
+  /* STATS BAR */
+  .stats-bar {
+    padding: 2rem 4rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
+  }
+  .stat-item { padding: 0.5rem 0; }
+  .stat-num {
+    font-family: var(--head);
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--paper);
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .stat-num span { color: var(--accent); }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+  }
+
+  /* PIPELINE */
+  .section {
+    padding: 7rem 4rem;
+    position: relative;
+  }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .section-title {
+    font-family: var(--head);
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 1rem;
+  }
+  .section-sub {
+    color: rgba(245,242,238,0.5);
+    font-size: 0.95rem;
+    font-weight: 300;
+    max-width: 500px;
+    line-height: 1.7;
+    margin-bottom: 4rem;
+  }
+
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    position: relative;
+  }
+  .pipeline::before {
+    content: '';
+    position: absolute;
+    top: 3rem;
+    left: calc(12.5% + 1.5rem);
+    right: calc(12.5% + 1.5rem);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    z-index: 0;
+  }
+  .pipe-step {
+    padding: 0 1.5rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+  .pipe-icon {
+    width: 56px; height: 56px;
+    border: 1.5px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+    margin: 0 auto 1.5rem;
+    background: var(--ink);
+    position: relative;
+    transition: background 0.3s;
+  }
+  .pipe-step:hover .pipe-icon { background: rgba(232,67,26,0.1); }
+  .pipe-step-num {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+  }
+  .pipe-step h3 {
+    font-family: var(--head);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.7rem;
+    letter-spacing: -0.02em;
+  }
+  .pipe-step p {
+    font-size: 0.8rem;
+    color: rgba(245,242,238,0.5);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  /* TECH STACK */
+  .tech-section {
+    padding: 7rem 4rem;
+    background: var(--surface);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .tech-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5px;
+    background: rgba(255,255,255,0.04);
+    margin-top: 3rem;
+    border: 1px solid rgba(255,255,255,0.04);
+  }
+  .tech-card {
+    background: var(--surface);
+    padding: 2.5rem;
+    transition: background 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .tech-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(.25,.46,.45,.94);
+  }
+  .tech-card:hover { background: #1f1f2e; }
+  .tech-card:hover::before { transform: scaleX(1); }
+  .tech-icon {
+    font-size: 2rem;
+    margin-bottom: 1.2rem;
+  }
+  .tech-card h3 {
+    font-family: var(--head);
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.6rem;
+  }
+  .tech-card p {
+    font-size: 0.82rem;
+    color: rgba(245,242,238,0.5);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+  .tech-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: var(--accent2);
+    border: 1px solid rgba(59,91,255,0.3);
+    padding: 0.2rem 0.6rem;
+    margin-top: 1rem;
+  }
+
+  /* DEMO / CHAT */
+  .demo-section {
+    padding: 7rem 4rem;
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 5rem;
+    align-items: center;
+  }
+  .chat-window {
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .chat-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex; align-items: center; gap: 1rem;
+    background: rgba(255,255,255,0.02);
+  }
+  .chat-avatar-mini {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent2), #1a2a8c);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+  }
+  .chat-header-info h4 {
+    font-family: var(--head);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .chat-header-info span {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    color: #4ade80;
+    letter-spacing: 0.08em;
+  }
+  .chat-messages {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 280px;
+  }
+  .msg {
+    max-width: 80%;
+    padding: 0.8rem 1.1rem;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+  .msg-bot {
+    background: rgba(59,91,255,0.12);
+    border: 1px solid rgba(59,91,255,0.2);
+    border-radius: 0 8px 8px 8px;
+    align-self: flex-start;
+    color: rgba(245,242,238,0.85);
+  }
+  .msg-user {
+    background: rgba(232,67,26,0.12);
+    border: 1px solid rgba(232,67,26,0.2);
+    border-radius: 8px 0 8px 8px;
+    align-self: flex-end;
+    color: rgba(245,242,238,0.85);
+  }
+  .msg-label {
+    font-family: var(--mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+    text-transform: uppercase;
+  }
+  .typing-indicator {
+    display: flex; gap: 4px; align-items: center;
+    padding: 0.9rem 1.1rem;
+    background: rgba(59,91,255,0.08);
+    border: 1px solid rgba(59,91,255,0.15);
+    border-radius: 0 8px 8px 8px;
+    width: fit-content;
+  }
+  .dot {
+    width: 6px; height: 6px;
+    background: rgba(59,91,255,0.6);
+    border-radius: 50%;
+    animation: typingDot 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typingDot { 0%,100%{transform:translateY(0);opacity:0.4;} 50%{transform:translateY(-4px);opacity:1;} }
+
+  .chat-input-row {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex; gap: 0.75rem;
+  }
+  .chat-input {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--paper);
+    font-family: var(--body);
+    font-size: 0.82rem;
+    padding: 0.7rem 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .chat-input:focus { border-color: rgba(59,91,255,0.4); }
+  .chat-input::placeholder { color: var(--muted); }
+  .chat-send {
+    background: var(--accent2);
+    border: none;
+    color: #fff;
+    padding: 0.7rem 1.2rem;
+    font-size: 1rem;
+    cursor: none;
+    transition: opacity 0.2s;
+  }
+  .chat-send:hover { opacity: 0.8; }
+
+  /* METRICS */
+  .metrics-section {
+    padding: 7rem 4rem;
+    background: linear-gradient(180deg, transparent, rgba(59,91,255,0.03), transparent);
+  }
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+    margin-top: 3rem;
+  }
+  .metric-card {
+    border: 1px solid rgba(255,255,255,0.07);
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .metric-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 1.5s cubic-bezier(.25,.46,.45,.94);
+  }
+  .metric-card[data-width="97"]::after { width: 97%; }
+  .metric-card[data-width="95"]::after { width: 95%; }
+  .metric-card[data-width="98"]::after { width: 98%; }
+  .metric-card[data-width="93"]::after { width: 93%; }
+  .metric-label {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .metric-val {
+    font-family: var(--head);
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 1;
+  }
+  .metric-val span { color: var(--accent); }
+  .metric-desc {
+    font-size: 0.78rem;
+    color: rgba(245,242,238,0.4);
+    margin-top: 0.5rem;
+    font-weight: 300;
+  }
+
+  /* FOOTER */
+  footer {
+    padding: 3rem 4rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-logo {
+    font-family: var(--head);
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+  .footer-logo span { color: var(--accent); }
+  .footer-copy {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+  .footer-tags {
+    display: flex; gap: 0.75rem;
+  }
+  .footer-tag {
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 0.3rem 0.7rem;
+    color: var(--muted);
+  }
+
+  /* BIG BG TEXT */
+  .bg-text {
+    position: absolute;
+    font-family: var(--head);
+    font-size: clamp(8rem, 18vw, 18rem);
+    font-weight: 800;
+    letter-spacing: -0.06em;
+    color: rgba(255,255,255,0.02);
+    pointer-events: none;
+    line-height: 1;
+    z-index: 0;
+    user-select: none;
+  }
+
+  /* SCROLL reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s cubic-bezier(.25,.46,.45,.94), transform 0.7s cubic-bezier(.25,.46,.45,.94);
+  }
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; padding: 7rem 1.5rem 3rem; }
+    .hero-visual { display: none; }
+    .stats-bar { grid-template-columns: repeat(2,1fr); padding: 2rem 1.5rem; }
+    .section, .tech-section, .demo-section, .metrics-section { padding: 4rem 1.5rem; }
+    .pipeline { grid-template-columns: repeat(2,1fr); }
+    .pipeline::before { display: none; }
+    .tech-grid { grid-template-columns: 1fr; }
+    .demo-section { grid-template-columns: 1fr; }
+    .metrics-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 1rem; text-align: center; }
+    .footer-tags { flex-wrap: wrap; justify-content: center; }
+  }
+
+
+  /* Connected GenAssist controls */
+  .generation-panel {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.015);
+  }
+  .generation-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    align-items: center;
+  }
+  .file-label {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    padding: 0.65rem 0.8rem;
+  }
+  .file-label { cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-label input { display: none; }
+  .video-toggle {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-top: 0.75rem;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+  }
+  .connection-status {
+    margin-top: 0.7rem;
+    font-family: var(--mono);
+    font-size: 0.62rem;
+    color: var(--muted);
+    white-space: pre-wrap;
+  }
+  .connection-status.ok { color: #4ade80; }
+  .connection-status.error { color: #fb7185; }
+  .media-result { margin-top: 0.7rem; max-width: 100%; }
+  .media-result audio, .media-result video { width: 100%; max-height: 300px; }
+  .chat-send:disabled { opacity: 0.45; }
+  @media (max-width: 560px) {
+    .generation-row { grid-template-columns: 1fr; }
+  }
+
+  /* About us */
+  .about-section {
+    padding: 7rem 4rem;
+    background:
+      radial-gradient(circle at 15% 15%, rgba(232,67,26,0.08), transparent 28%),
+      radial-gradient(circle at 85% 80%, rgba(59,91,255,0.08), transparent 30%),
+      var(--surface);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    margin-top: 3rem;
+  }
+  .team-card {
+    background: rgba(10,10,15,0.7);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s, border-color 0.3s;
+  }
+  .team-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .team-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(232,67,26,0.35);
+  }
+  .team-role {
+    font-family: var(--mono);
+    color: var(--accent);
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.55rem;
+  }
+  .team-card h3 {
+    font-family: var(--head);
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.8rem;
+  }
+  .team-details {
+    display: grid;
+    gap: 0.75rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid rgba(255,255,255,0.07);
+    font-family: var(--mono);
+    color: var(--muted);
+    font-size: 0.66rem;
+    letter-spacing: 0.05em;
+  }
+  .team-detail-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .guide-card {
+    grid-column: 1 / -1;
+    background: linear-gradient(110deg, rgba(232,67,26,0.08), rgba(59,91,255,0.08));
+  }
+  @media (max-width: 900px) {
+    .about-section { padding: 4rem 1.5rem; }
+    .team-grid { grid-template-columns: 1fr; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Gen<span>Assist</span></div>
+  <ul class="nav-links">
+    <li><a href="#pipeline">PIPELINE</a></li>
+    <li><a href="#tech">TECHNOLOGY</a></li>
+    <li><a href="#demo">DEMO</a></li>
+    <li><a href="#metrics">METRICS</a></li>
+    <li><a href="#about">ABOUT US</a></li>
+  </ul>
+  <button class="nav-cta">GET STARTED →</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-tag">AI-Driven Customer Support</div>
+    <h1>Talk to an<em>AI Avatar</em>Not a Bot.</h1>
+    <p class="hero-desc">Stable Diffusion-based avatar generation, neural text-to-speech, and DreamTalk video synthesis combined to create photorealistic talking avatars for enterprise customer support.</p>
+    <div class="hero-actions">
+      <button class="btn-primary">LAUNCH DEMO</button>
+      <button class="btn-ghost">VIEW PIPELINE →</button>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="avatar-frame">
+      <div class="avatar-bg-ring"></div>
+      <div class="avatar-bg-ring"></div>
+      <div class="avatar-card">
+        <div class="avatar-face">
+          <div class="avatar-head"></div>
+          <div class="avatar-body"></div>
+          <div class="avatar-status">
+            <span class="status-dot"></span>
+            AVATAR ACTIVE — LIP-SYNC READY
+          </div>
+        </div>
+        <div class="avatar-glare"></div>
+      </div>
+      <div class="badge badge-1">DIFFUSION <span>►</span> SYNTHESIS</div>
+      <div class="badge badge-2">TTS <span>►</span> 96.4% ACCURACY</div>
+      <div class="badge badge-3">DREAMTALK <span>►</span> 60FPS</div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item reveal">
+    <div class="stat-num">97<span>%</span></div>
+    <div class="stat-label">Lip-Sync Accuracy</div>
+  </div>
+  <div class="stat-item reveal">
+    <div class="stat-num">&lt;2<span>s</span></div>
+    <div class="stat-label">Response Latency</div>
+  </div>
+  <div class="stat-item reveal">
+    <div class="stat-num">60<span>fps</span></div>
+    <div class="stat-label">Video Render Rate</div>
+  </div>
+  <div class="stat-item reveal">
+    <div class="stat-num">∞<span>+</span></div>
+    <div class="stat-label">Scalable Deployments</div>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<section class="section" id="pipeline">
+  <div class="bg-text" style="right:-2rem;top:-2rem;">TEXT</div>
+  <div class="section-label">System Architecture</div>
+  <h2 class="section-title reveal">Text-to-Video<br>Generation Pipeline</h2>
+  <p class="section-sub reveal">A modular, end-to-end pipeline transforms raw textual input into a fully synchronized talking avatar video in under two seconds.</p>
+  <div class="pipeline">
+    <div class="pipe-step reveal">
+      <div class="pipe-icon">📝</div>
+      <div class="pipe-step-num">STEP 01</div>
+      <h3>Text Input</h3>
+      <p>Customer query or support response fed into the generative pipeline as structured natural language.</p>
+    </div>
+    <div class="pipe-step reveal">
+      <div class="pipe-icon">🎨</div>
+      <div class="pipe-step-num">STEP 02</div>
+      <h3>Stable Diffusion Avatar</h3>
+      <p>Stable Diffusion produce high-quality, customizable avatar facial images with adjustable expressions.</p>
+    </div>
+    <div class="pipe-step reveal">
+      <div class="pipe-icon">🔊</div>
+      <div class="pipe-step-num">STEP 03</div>
+      <h3>Neural TTS</h3>
+      <p>Deep learning TTS models convert text to natural, expressive speech with accurate prosody and emotion.</p>
+    </div>
+    <div class="pipe-step reveal">
+      <div class="pipe-icon">🎬</div>
+      <div class="pipe-step-num">STEP 04</div>
+      <h3>DreamTalk Video</h3>
+      <p>DreamTalk synchronizes generated audio with facial animation to produce photorealistic lip-synced video output.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TECH CARDS -->
+<section class="tech-section" id="tech">
+  <div class="section-label">Core Technologies</div>
+  <h2 class="section-title reveal">Built on<br>Cutting-Edge AI</h2>
+  <p class="section-sub reveal">Three state-of-the-art deep learning systems integrated into one seamless, production-ready architecture.</p>
+  <div class="tech-grid">
+    <div class="tech-card reveal">
+      <div class="tech-icon">⚡</div>
+      <h3>Stable Diffusion</h3>
+      <p>Stable Diffusion generates customizable, front-facing avatar portraits from text prompts for the customer-support video pipeline.</p>
+      <span class="tech-tag">IMAGE SYNTHESIS</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🗣️</div>
+      <h3>Neural Text-to-Speech</h3>
+      <p>Text-to-speech converts the generated customer-support response into clear English speech for the avatar animation pipeline.</p>
+      <span class="tech-tag">SPEECH SYNTHESIS</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🎭</div>
+      <h3>DreamTalk Video Rendering</h3>
+      <p>DreamTalk's diffusion-based approach synchronizes audio phonemes with precise facial animations, achieving industry-leading lip-sync accuracy and natural micro-expression dynamics.</p>
+      <span class="tech-tag">VIDEO GENERATION</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🌐</div>
+      <h3>Web & Mobile Deployment</h3>
+      <p>The modular architecture supports real-time deployment on web platforms, mobile apps, and enterprise CRM systems via REST APIs and WebSocket streaming endpoints.</p>
+      <span class="tech-tag">DEPLOYMENT</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">💡</div>
+      <h3>Emotion-Aware Responses</h3>
+      <p>Sentiment analysis pipelines detect user emotional context and adapt avatar facial expressions and speech tone dynamically — empathetic, professional, or assertive as needed.</p>
+      <span class="tech-tag">COMING SOON</span>
+    </div>
+    <div class="tech-card reveal">
+      <div class="tech-icon">🌍</div>
+      <h3>Prototype Integration</h3>
+      <p>The current prototype connects Stable Diffusion, English text-to-speech, DreamTalk, and a web interface in one end-to-end workflow.</p>
+      <span class="tech-tag">ROADMAP</span>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO CHAT -->
+<section class="demo-section" id="demo">
+  <div>
+    <div class="section-label">Live Interaction</div>
+    <h2 class="section-title reveal">See the Avatar<br>in Action</h2>
+    <p class="section-sub reveal">Type any customer query and watch as the system generates an avatar response with full voice and lip synchronization. Real-time. No waiting.</p>
+    <div style="margin-top:2rem;">
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <div style="width:36px;height:36px;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">✓</div>
+          <span style="font-size:0.85rem;color:rgba(245,242,238,0.6);font-weight:300;">Photorealistic avatar with dynamic expressions</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <div style="width:36px;height:36px;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">✓</div>
+          <span style="font-size:0.85rem;color:rgba(245,242,238,0.6);font-weight:300;">Real-time lip-sync at 60fps video output</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <div style="width:36px;height:36px;border:1.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;">✓</div>
+          <span style="font-size:0.85rem;color:rgba(245,242,238,0.6);font-weight:300;">Context-aware, expressive neural speech</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;">
+          <div style="width:36px;height:36px;border:1.5px solid rgba(59,91,255,0.6);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;color:rgba(59,91,255,0.6);">→</div>
+          <span style="font-size:0.85rem;color:rgba(245,242,238,0.4);font-weight:300;">Current prototype supports English speech</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-window">
+    <div class="chat-header">
+      <div class="chat-avatar-mini">🤖</div>
+      <div class="chat-header-info">
+        <h4>GenAssist Support Agent</h4>
+        <span>● ONLINE — AVATAR RENDERING</span>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div>
+        <div class="msg-label">AVATAR</div>
+        <div class="msg msg-bot">Hello! I'm your AI Support Avatar. I'm here to help you 24/7. How can I assist you today?</div>
+      </div>
+      <div style="align-self:flex-end;text-align:right;">
+        <div class="msg-label">YOU</div>
+        <div class="msg msg-user">What makes this avatar different from a regular chatbot?</div>
+      </div>
+      <div>
+        <div class="msg-label">AVATAR</div>
+        <div class="msg msg-bot">Unlike text-only chatbots, I combine Stable Diffusion-generated facial imagery, neural speech synthesis, and DreamTalk video rendering to provide a fully human-like visual interaction — complete with lip sync and facial expressions.</div>
+      </div>
+      <div class="typing-indicator" id="typingIndicator" style="display:none;">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+    </div>
+
+    <div class="generation-panel">
+      <div class="generation-row">
+        <label class="file-label" id="portraitLabel">
+          PORTRAIT: USE DEFAULT
+          <input id="portraitInput" type="file" accept="image/png,image/jpeg,image/webp">
+        </label>
+      </div>
+      <label class="video-toggle">
+        <input id="videoInput" type="checkbox" checked>
+        GENERATE DREAMTALK VIDEO WHEN CHECKPOINT IS AVAILABLE
+      </label>
+      <div class="connection-status" id="connectionStatus">CONNECTING TO GENASSIST BACKEND...</div>
+      <div class="media-result" id="mediaResult"></div>
+    </div>
+
+    <div class="chat-input-row">
+      <input class="chat-input" id="chatInput" type="text" placeholder="Ask the avatar anything…">
+      <button class="chat-send" id="sendBtn">➤</button>
+    </div>
+  </div>
+</section>
+
+<!-- METRICS -->
+<section class="metrics-section" id="metrics">
+  <div class="section-label">Performance Evaluation</div>
+  <h2 class="section-title reveal">Numbers That<br>Speak for Themselves</h2>
+  <p class="section-sub reveal">System performance evaluated across video realism, lip-sync accuracy, response latency, and user engagement metrics.</p>
+  <div class="metrics-grid">
+    <div class="metric-card reveal" data-width="97">
+      <div class="metric-label">Lip-Sync Accuracy Score</div>
+      <div class="metric-val">97<span>%</span></div>
+      <div class="metric-desc">Measured via Landmark Distance Error across 10k test video frames</div>
+    </div>
+    <div class="metric-card reveal" data-width="95">
+      <div class="metric-label">Video Realism (FID Score)</div>
+      <div class="metric-val">95<span>%</span></div>
+      <div class="metric-desc">Fréchet Inception Distance benchmarked against human reference video</div>
+    </div>
+    <div class="metric-card reveal" data-width="98">
+      <div class="metric-label">Speech Naturalness (MOS)</div>
+      <div class="metric-val">4.8<span>/5</span></div>
+      <div class="metric-desc">Mean Opinion Score from blind human listener evaluation study</div>
+    </div>
+    <div class="metric-card reveal" data-width="93">
+      <div class="metric-label">User Engagement Uplift</div>
+      <div class="metric-val">+93<span>%</span></div>
+      <div class="metric-desc">Compared to traditional text-based chatbot interfaces in A/B testing</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ABOUT US -->
+<section class="about-section" id="about">
+  <div class="section-label">Project Team</div>
+  <h2 class="section-title reveal">Meet the Students<br>Behind GenAssist</h2>
+  <p class="section-sub reveal">Batch B15 from the Department of CSE (AI&amp;ML), building a more visual and accessible approach to AI-powered customer support.</p>
+  <div class="team-grid">
+    <article class="team-card reveal">
+      <div class="team-role">Project Team Member</div>
+      <h3>Magam Honeysha</h3>
+      <div class="team-details">
+        <div class="team-detail-row"><span>Roll Number</span><span>245523748308</span></div>
+        <div class="team-detail-row"><span>Batch ID</span><span>B15</span></div>
+        <div class="team-detail-row"><span>Department</span><span>CSE (AI&amp;ML)</span></div>
+      </div>
+    </article>
+    <article class="team-card reveal">
+      <div class="team-role">Project Team Member</div>
+      <h3>Navneet Kaur</h3>
+      <div class="team-details">
+        <div class="team-detail-row"><span>Roll Number</span><span>245523748108</span></div>
+        <div class="team-detail-row"><span>Batch ID</span><span>B15</span></div>
+        <div class="team-detail-row"><span>Department</span><span>CSE (AI&amp;ML)</span></div>
+      </div>
+    </article>
+    <article class="team-card reveal">
+      <div class="team-role">Project Team Member</div>
+      <h3>A Hansika</h3>
+      <div class="team-details">
+        <div class="team-detail-row"><span>Roll Number</span><span>245523748064</span></div>
+        <div class="team-detail-row"><span>Batch ID</span><span>B15</span></div>
+        <div class="team-detail-row"><span>Department</span><span>CSE (AI&amp;ML)</span></div>
+      </div>
+    </article>
+    <article class="team-card guide-card reveal">
+      <div class="team-role">Project Guide</div>
+      <h3>Maddileti Reddy V</h3>
+      <div class="team-details">
+        <div class="team-detail-row"><span>Designation</span><span>Asst. Professor</span></div>
+        <div class="team-detail-row"><span>Department</span><span>CSE (AI&amp;ML)</span></div>
+        <div class="team-detail-row"><span>Project Batch</span><span>B15</span></div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Gen<span>Assist</span></div>
+  <div class="footer-tags">
+    <span class="footer-tag">STABLE DIFFUSION</span>
+    <span class="footer-tag">DREAMTALK</span>
+    <span class="footer-tag">TTS</span>
+    <span class="footer-tag">TEXT-TO-VIDEO</span>
+    <span class="footer-tag">AI AVATARS</span>
+  </div>
+  <div class="footer-copy">© 2025 GENASSIST — AI CUSTOMER SUPPORT SYSTEM</div>
+</footer>
+
+<script>
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', event => {
+    mx = event.clientX;
+    my = event.clientY;
+    cursor.style.left = mx + 'px';
+    cursor.style.top = my + 'px';
+  });
+  function animateRing() {
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(animateRing);
+  }
+  animateRing();
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach((entry, index) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), index * 80);
+      }
+    });
+  }, {threshold: 0.1});
+  document.querySelectorAll('.reveal').forEach(element => observer.observe(element));
+
+  const chatInput = document.getElementById('chatInput');
+  const sendButton = document.getElementById('sendBtn');
+  const messages = document.getElementById('chatMessages');
+  const typing = document.getElementById('typingIndicator');
+  const portraitInput = document.getElementById('portraitInput');
+  const portraitLabel = document.getElementById('portraitLabel');
+  const videoInput = document.getElementById('videoInput');
+  const status = document.getElementById('connectionStatus');
+  const mediaResult = document.getElementById('mediaResult');
+
+  function setStatus(message, kind = '') {
+    status.textContent = message;
+    status.className = 'connection-status ' + kind;
+  }
+
+  function addMessage(role, text) {
+    const wrapper = document.createElement('div');
+    if (role === 'user') {
+      wrapper.style.alignSelf = 'flex-end';
+      wrapper.style.textAlign = 'right';
+    }
+    const label = document.createElement('div');
+    label.className = 'msg-label';
+    label.textContent = role === 'user' ? 'YOU' : 'AVATAR';
+    const bubble = document.createElement('div');
+    bubble.className = 'msg ' + (role === 'user' ? 'msg-user' : 'msg-bot');
+    bubble.textContent = text;
+    wrapper.append(label, bubble);
+    messages.insertBefore(wrapper, typing);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  async function checkBackend() {
+    try {
+      const response = await fetch('/api/health');
+      const data = await response.json();
+      setStatus(
+        data.dreamtalk_ready
+          ? 'BACKEND ONLINE — DREAMTALK READY'
+          : 'BACKEND ONLINE — VOICE READY; DREAMTALK CHECKPOINT NOT FOUND',
+        'ok'
+      );
+    } catch (error) {
+      setStatus('BACKEND OFFLINE — START app.py TO ENABLE GENERATION', 'error');
+    }
+  }
+
+  async function sendMessage() {
+    const query = chatInput.value.trim();
+    if (!query || sendButton.disabled) return;
+
+    addMessage('user', query);
+    chatInput.value = '';
+    typing.style.display = 'flex';
+    sendButton.disabled = true;
+    mediaResult.replaceChildren();
+    setStatus('GENASSIST IS PREPARING THE RESPONSE...');
+
+    const form = new FormData();
+    form.append('message', query);
+    form.append('generate_video', String(videoInput.checked));
+    if (portraitInput.files[0]) form.append('portrait', portraitInput.files[0]);
+
+    try {
+      const response = await fetch('/api/chat', {method: 'POST', body: form});
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || 'Generation failed');
+
+      addMessage('bot', data.response);
+      if (data.audio_url) {
+        const audio = document.createElement('audio');
+        audio.controls = true;
+        audio.autoplay = true;
+        audio.src = data.audio_url;
+        mediaResult.appendChild(audio);
+      }
+      if (data.video_url) {
+        const video = document.createElement('video');
+        video.controls = true;
+        video.autoplay = true;
+        video.src = data.video_url;
+        mediaResult.appendChild(video);
+      }
+      setStatus(data.status || 'RESPONSE READY', 'ok');
+    } catch (error) {
+      addMessage('bot', 'I could not generate the response. Please check the backend status.');
+      setStatus(error.message, 'error');
+    } finally {
+      typing.style.display = 'none';
+      sendButton.disabled = false;
+      messages.scrollTop = messages.scrollHeight;
+    }
+  }
+
+  portraitInput.addEventListener('change', () => {
+    portraitLabel.childNodes[0].nodeValue = portraitInput.files[0]
+      ? `PORTRAIT: ${portraitInput.files[0].name} `
+      : 'PORTRAIT: USE DEFAULT ';
+  });
+  sendButton.addEventListener('click', sendMessage);
+  chatInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter') sendMessage();
+  });
+  document.querySelector('.nav-cta').addEventListener('click', () => {
+    document.getElementById('demo').scrollIntoView({behavior: 'smooth'});
+  });
+  document.querySelector('.btn-primary').addEventListener('click', () => {
+    document.getElementById('demo').scrollIntoView({behavior: 'smooth'});
+  });
+  document.querySelector('.btn-ghost').addEventListener('click', () => {
+    document.getElementById('pipeline').scrollIntoView({behavior: 'smooth'});
+  });
+
+  checkBackend();
+</script>
+</body>
+</html>

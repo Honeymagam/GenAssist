@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <div align="center">
 
 # GenAssist
@@ -192,3 +193,6 @@ This project builds on FastAPI, React, OpenAI-compatible language models, Coqui 
 <div align="center">
   Built as an academic project at Keshav Memorial Engineering College.
 </div>
+=======
+# GenAssist
+>>>>>>> 6e16147fee5addc769cb585ff913357e6fac5306
